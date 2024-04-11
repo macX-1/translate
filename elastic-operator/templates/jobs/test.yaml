@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "eck-operator.name" . }}-test
+  labels:
+    "helm.test/app": {{ include "eck-operator.name" . }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      name: {{ include "eck-operator.name" . }}-test
+      labels:
+        "helm.test/app": {{ include "eck-operator.name" . }}
+    spec:
+      restartPolicy: Never
+      serviceAccountName: tester
+      containers:
+        - name: eck-operator-test
+          image: {{ include "eck-operator.job.image" . }}
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          command:
+            - bash
+            - "-c"
+            - |
+              # check status
+              name="{{ include "eck-operator.name" . }}"
+              namespace="$NAMESPACE"
+
+              if ! kubectl rollout status statefulset/$name -n $namespace --timeout=30s; then
+                  echo "statefulset/$name Not Ready."
+                  exit 1
+              fi
+              echo "statefulset/$name be Ready."

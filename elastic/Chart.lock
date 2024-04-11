@@ -1,0 +1,9 @@
+dependencies:
+- name: common
+  repository: file://../../common
+  version: 1.0.0
+- name: settings
+  repository: file://../../settings
+  version: 1.0.0
+digest: sha256:3cec712dbf3897d27e974459c4a5412e7810c3e12699143431d071b5e06460c6
+generated: "2024-03-19T14:52:34.357650878+08:00"

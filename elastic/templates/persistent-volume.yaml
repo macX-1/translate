@@ -1,0 +1,31 @@
+{{- if .Values.storage.enabled }}
+{{- range $i := until (int .Values.members ) }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ $.Values.storage.name }}-{{ $i | toString }}
+  labels:
+    type: local
+  {{- if $.Values.storage.annotations }}
+  annotations: {{ toYaml $.Values.storage.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  storageClassName: {{ $.Values.storage.storageClassName }}
+  capacity:
+    storage: {{ $.Values.storage.size }}
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  local:
+    path: {{ include "settings.db.storage" . }}/{{ $.Values.storage.localRootPath }}{{ $i | toString }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: qslocal.io/volume
+              operator: In
+              values:
+                - db{{ $i }}
+---
+{{- end }}
+{{- end }}

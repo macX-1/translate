@@ -1,0 +1,17 @@
+apiVersion: v2
+description: Elasticsearch managed by the ECK operator
+icon: https://helm.elastic.co/icons/elasticsearch.png
+kubeVersion: '>= 1.21.0-0'
+dependencies:
+  - name: common
+    version: 1.0.0
+    repository: file://../../common
+  - name: settings
+    version: 1.0.0
+    repository: file://../../settings
+name: eck-elasticsearch
+sources:
+- https://github.com/elastic/cloud-on-k8s
+- https://github.com/elastic/elasticsearch/
+type: application
+version: 0.9.1

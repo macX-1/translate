@@ -1,0 +1,171 @@
+---
+# Default values for eck-elasticsearch.
+# This is a YAML-formatted file.
+
+nameOverride: "elastic"
+
+version: 8.12.0
+
+image:
+  registry: ""
+  repository: operator/elasticsearch
+  tag: 8.12.0
+
+labels: {}
+annotations: {}
+auth: {}
+
+monitoring: {}
+  # metrics:
+  #   elasticsearchRefs:
+  #   - name: monitoring
+  #     namespace: observability
+  # logs:
+  #   elasticsearchRefs:
+  #   - name: monitoring
+  #     namespace: observability
+
+transport: {}
+  # service:
+  #   metadata:
+  #     labels:
+  #       my-custom: label
+  #   spec:
+  #     type: LoadBalancer
+  # tls:
+  #   subjectAltNames:
+  #     - ip: 1.2.3.4
+  #     - dns: hulk.example.com
+  #   certificate:
+  #     secretName: custom-ca
+
+http: {}
+  # service:
+  #   metadata:
+  #     labels:
+  #       my-custom: label
+  #   spec:
+  #     type: LoadBalancer
+  # tls:
+  #   selfSignedCertificate:
+  #     # To fully disable TLS for the HTTP layer of Elasticsearch, simply
+  #     # set the below field to 'true', removing all other fields.
+  #     disabled: false
+  #     subjectAltNames:
+  #       - ip: 1.2.3.4
+  #       - dns: hulk.example.com
+  #   certificate:
+  #     secretName: custom-ca
+
+secureSettings: []
+  # - secretName: one-secure-settings-secret
+  # Projection of secret keys to specific paths
+  # - secretName: gcs-secure-settings
+  #   entries:
+  #   - key: gcs.client.default.credentials_file
+  #   - key: gcs_client_1
+  #     path: gcs.client.client_1.credentials_file
+  #   - key: gcs_client_2
+  #     path: gcs.client.client_2.credentials_file
+
+updateStrategy: {}
+  # changeBudget:
+  #   maxSurge: 3
+  #   maxUnavailable: 1
+
+remoteClusters: {}
+  # - name: cluster-two
+  #   elasticsearchRef:
+  #     name: cluster-two
+  #     namespace: ns-two
+
+# VolumeClaimDeletePolicy sets the policy for handling deletion of PersistentVolumeClaims for all NodeSets.
+# Possible values are DeleteOnScaledownOnly and DeleteOnScaledownAndClusterDeletion.
+# By default, if not set or empty, the operator sets DeleteOnScaledownAndClusterDeletion.
+#
+volumeClaimDeletePolicy: ""
+
+# Settings to limit the disruption when pods need to be rescheduled for some reason such as upgrades or routine maintenance.
+# By default, if not set, the operator sets a budget that doesn't allow any pod to be removed in case the cluster is not green or if there is only one node of type `data` or `master`.
+# In all other cases the default PodDisruptionBudget sets `minUnavailable` equal to the total number of nodes minus 1.
+# To completely disable the pod disruption budget set `disabled` to true.
+#
+# podDisruptionBudget:
+#   spec:
+#     minAvailable: 2
+#     selector:
+#       matchLabels:
+#         elasticsearch.k8s.elastic.co/cluster-name: quickstart
+#   disabled: true
+
+# Used to check access from the current resource to a resource (for ex. a remote Elasticsearch cluster) in a different namespace.
+# Can only be used if ECK is enforcing RBAC on references.
+#
+# serviceAccountName: ""
+
+# Number of revisions to retain to allow rollback in the underlying StatefulSets.
+# By default, if not set, Kubernetes sets 10.
+#
+# revisionHistoryLimit: 2
+
+# Node configuration settings.
+# The node roles which can be configured here are:
+# - "master"
+# - "data_hot"
+# - "data_cold"
+# - "data_frozen"
+# - "data_content"
+# - "ml"
+# - "ingest"
+# ref: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-node-configuration.html
+#
+members: 1
+nodeSets:
+- name: node
+  count: 1
+  config:
+    node.store.allow_mmap: false
+  podTemplate:
+    spec:
+    # affinity:
+    #   nodeAffinity:
+    #     requiredDuringSchedulingIgnoredDuringExecution:
+    #       nodeSelectorTerms:
+    #       - matchExpressions:
+    #         - key: topology.kubernetes.io/zone
+    #           operator: In
+    #           values:
+    #           - antarctica-east1
+    #           - antarctica-west1
+      containers:
+      - name: elasticsearch
+        # env:
+        # - name: "my-env-var"
+        #   value: "my-value"
+        resources:
+          limits:
+            cpu: 1
+            memory: 2Gi
+          requests:
+            cpu: 200m
+            memory: 200Mi
+  volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        storageClassName: elastic-storage
+
+storage:
+  enabled: true
+  annotations:
+    helm.sh/resource-policy: keep
+  # this name control by operator, not rename
+  name: elastic
+  storageClassName: elastic-storage
+  size: 10Gi
+  localRootPath: elastic/data

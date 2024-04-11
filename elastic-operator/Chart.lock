@@ -1,0 +1,9 @@
+dependencies:
+- name: eck-operator-crds
+  repository: ""
+  version: 2.11.1
+- name: common
+  repository: file://../../common
+  version: 1.0.0
+digest: sha256:38640c8318852a1faf9c7b276e2453da82425a2890836dac50ce476435a3fd49
+generated: "2024-03-22T09:40:49.51100778+08:00"
